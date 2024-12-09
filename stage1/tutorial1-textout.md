@@ -6,9 +6,9 @@ With a variety of file types hosted on InvenioRDM, developing a robust strategy 
 - PDF (Text-based and Image-based)
 - DOCX
 - PPTX
-- CSV
 - EPUB
 - RTF
+- CSV
 
 Each library is evaluated based on:
 1. Document Quality
@@ -16,8 +16,8 @@ Each library is evaluated based on:
 3. Community Support (maintenance; up-to-date)
 4. Performance Metrics
 
-### 1. PDF (Portable Document Format)
-PDFs can contain either text-based or image-based data. Each type requires a different approach for efficient text extraction.
+### 1. PDF
+PDFs (Portable Document Format) can contain either text-based or image-based data. Each type requires a different approach for efficient text extraction.
 
 #### 1.1 For Text-based PDF: PyMuPDF
 For **Text-Based PDF**, several libraries are available:
@@ -144,7 +144,7 @@ Several Python libraries are available for extracting text from DOCX files:
 - *docx-simple*
 - *docx2txt*
 - *python-docx*, selected for this tutorial.
-- *Mammoth*.
+- *Mammoth*
 
 After comparing all results, **python-docx** was selected for its simplicity. However, if things change in the future, if may be worth revisiting alternative libraries.
 
@@ -266,7 +266,7 @@ if __name__ == "__main__":
 - Citations: Included
 
 ### 3. PPTX
-PowerPoint (.pptx) files are widely used for presentations and often contain a mix of text, images, captions, speaker notes, tables, and references. Extracting meaningful content from these files requires handling their diverse elements effectively.
+PPTX (PowerPoint) files are widely used for presentations and often contain a mix of text, images, captions, speaker notes, tables, and references. Extracting meaningful content from these files requires handling their diverse elements effectively.
 
 **Implementation: Extracting Text from PPTX Files**
 
@@ -345,7 +345,7 @@ if __name__ == "__main__":
 - References (last page): Clear and formatted correctly.
 
 ### 4. EPUB
-EPUB, short for electronic publication, is a widely used e-book file format with the “.epub” extension. It is designed to store text and multimedia content in a compressed and standardized manner, making it suitable for a variety of e-reading platforms.
+EPUB, short for Electronic Publication, is a widely used e-book file format with the “.epub” extension. It is designed to store text and multimedia content in a compressed and standardized manner, making it suitable for a variety of e-reading platforms.
 
 Among the available Python libraries for processing EPUB files, **EbookLib** stands out for its ability to handle both text and images efficiently.
 
@@ -384,7 +384,7 @@ if __name__ == "__main__":
 - Citations: Clear and good.
 
 ### 5. RTF
-RTF, or Rich Text Format, is a file format that facilitates the exchange of text documents between different word processors and operating systems. It supports a range of formatting options but can sometimes be challenging to process programmatically due to its complexity.
+RTF (Rich Text Format), is a file format that facilitates the exchange of text documents between different word processors and operating systems. It supports a range of formatting options but can sometimes be challenging to process programmatically due to its complexity.
 
 Two commonly used libraries for handling RTF files are **Pyth RTF** and **striprtf**. However, both libraries have significant limitations, such as outdated maintenance and difficulties in converting certain RTF features into readable formats. Attempts to convert .rtf files to .xml and extract text were unsuccessful due to the lack of support and compatibility issues.
 
@@ -395,8 +395,8 @@ Install LibreOffice and use the following command to convert an RTF file to DOCX
 libreoffice --convert-to docx Paperfortest1.rtf --headless
 ```
 
-### 6. CSV (Comma-Separated Values)
-A CSV file is a plain text file format that uses a specific structure to save data in a tabular form, with each line representing a data record and fields separated by commas. CSV, which stands for Comma-Separated Values, is widely used for datasets due to its simplicity and compatibility across platforms.
+### 6. CSV
+A CSV (Comma-Separated Values) file is a plain text file format that uses a specific structure to save data in a tabular form, with each line representing a data record and fields separated by commas. CSV, which stands for Comma-Separated Values, is widely used for datasets due to its simplicity and compatibility across platforms.
 
 **Notes**:
 Based on testing with various CSV files, it is recommended to handle CSV files separately. Unlike textual files, CSV files are often shared as datasets, sometimes accompanying published papers. The decision to include CSV files in a workflow should depend on the research goals and the nature of the project.
@@ -427,4 +427,4 @@ print(textual_data.head())
 ```
 
 ## Conclusion
-This tutorial demonstrates the strengths and limitations of Python libraries for text extraction across various file formats. These libraries are tested, evaluated, and some of them are later used in stage 2 to perform data extraction.
+This tutorial tested and showcased the strengths and limitations of Python libraries for text extraction across various file formats. These libraries are tested, evaluated, and some of them are later used in stage 2 to perform data extraction.

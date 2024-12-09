@@ -2,7 +2,7 @@
 ## Introduction
 This repository documents stages of a project using computational methods in natural language processing and machine learning to support the Knowledge Commons. The project covers steps like data acquisition, text extraction, preprocessing, and vectorization. The end goal is to improve search functionality, offer related record recommendations, and implement subject tagging. Future steps, such as the validation of vectorization and its implementation to achieve these end goals, are left for future endeavor.
 
-## Stage 1: Data acquisition and testing python libraries
+## Stage 1: Data Acquisition and Testing Python Libraries
 
 ### 1.1: Basics about InvenioRDM, API, Docker
 - InvenioRDM: Read InvenioRDM [documentations](https://inveniordm.docs.cern.ch/)

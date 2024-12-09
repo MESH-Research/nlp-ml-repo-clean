@@ -23,7 +23,7 @@ Stage 2 focuses on extracting metadata and textual information from Invenio RDM.
 This step involves accessing and downloading files from the Invenio API and extracting text data from the downloaded files. Since the files come in various formats (e.g., PDF, DOCX, PPTX, JPG, etc.), I developed a tailored strategy for text extraction based on each format. To optimize local storage, successfully processed files are deleted afterward.
 
 #### Deliverables:
-1. **Script**: `apiinvenio-9th.py` - used for text extraction.
+1. **Script**: `apiinvenio_ninth.py` - used for text extraction.
 2. **CSV file**: `output9clean.csv` - stored in OneDrive for data security.
 3. **Files that cannot be processed**: stored under the folder `download_files` in OneDrive for data security.
 

@@ -6,7 +6,7 @@ import fitz
 import pytesseract
 from PIL import Image
 from docx import Document
-from doc2docx import convert
+#from doc2docx import convert
 import pptx
 import sys # Deal with large text field in the output csv
 import csv
@@ -15,10 +15,10 @@ from tika import parser
 # Note: Apache Tika is what I turned to after failing many times dealing with .doc files.
 
 # Set up tika locally
-# Need to download the server `tika-server-standard-3.0.0.jar` from tika's website: https://tika.apache.org/download.html
+# Download the server `tika-server-standard-3.0.0.jar` from tika's website: https://tika.apache.org/download.html
 os.environ['TIKA_SERVER_ENDPOINT'] = 'http://localhost:9998'
 
-# Make sure large text field in csv can be processed, this is useful when I examine the output.csv
+# Make sure large text field in csv can be processed
 csv.field_size_limit(sys.maxsize)
 
 # Set up logging and make it display in my console
@@ -87,6 +87,7 @@ def extract_file(local_file_path, file_name):
         Extracted text (or None) and Flag (0 for success, 1 for failure).
     """
     # Switched to dictionary{} instead of list[]
+    # List iterates through each entry, costs more time
     extraction_methods = {
         '.pdf': extract_text_from_pdf,
         '.docx': extract_text_from_docx,
@@ -119,7 +120,7 @@ def extract_file(local_file_path, file_name):
 
     if extraction_function:
         try:
-            logging.info(f"Extracting text from {file_name} using {extraction_function.__name__}")
+            logging.info(f"Extracting text from {file_name} using {extraction_function.__name__}") # Return the name of the function as a string
             extracted_text = extraction_function(local_file_path)
             if extracted_text:
                 return extracted_text, 0 # Success
@@ -165,7 +166,7 @@ def extract_text_from_pdf(pdf_file_path):
                         img = Image.frombytes("RGB",[pix.width, pix.height], pix.samples)
                         ocr_text = pytesseract.image_to_string(img)
 
-                        # Validate OCR results
+                        # Validate OCR results: remove whitespace, measure length
                         if len(ocr_text.strip()) < 10:
                             logging.warning(f"OCR results on page {page_num + 1} may be incomplete.")
                             ocr_text = f"[Potential OCR issue on page {page_num + 1}]"
@@ -198,11 +199,12 @@ def extract_text_from_docx(docx_file_path):
         doc = Document(docx_file_path)
         paragraphs = []
 
+        # Loop through each paragraph
         for paragraph_num, paragraph in enumerate(doc.paragraphs, start=1):
             # Check if the paragraph text contains unexpected formatting or artifacts
             if paragraph.text.strip():
                 clean_text = paragraph.text.strip()
-                if "<" in clean_text or ">" in clean_text:
+                if "<" in clean_text or ">" in clean_text: # Check for HTML or XML or markup
                     logging.warning(f"Potential formatting instructions detected in paragraph {paragraph_num}: {clean_text}")
                 paragraphs.append(clean_text)
             else:
@@ -433,7 +435,7 @@ def process_files(api_url, endpoint, api_key, output_csv, download_path):
             response.raise_for_status() # Raise an error for non-200 responses
             data = response.json()
 
-            #This is where I check each page and all its records
+            #Check each page and all its records
             for record in data.get('hits', {}).get('hits', []):
                 record_id = record['id']
                 doi = record.get('pids', {}).get('doi', {}).get('identifier', 'N/A')  # Extract DOI if available

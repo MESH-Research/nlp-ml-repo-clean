@@ -24,15 +24,16 @@ This step involves accessing and downloading files from the Invenio API and extr
 
 #### Deliverables:
 1. **Script**: `apiinvenio_ninth.py` - used for text extraction.
-2. **CSV file**: `output9clean.csv` - stored in OneDrive for data security.
-3. **Files that cannot be processed**: stored under the folder `download_files` in OneDrive for data security.
+2. **CSV file**: `output9.csv` - stored in OneDrive for data security.
+3. **Files that cannot be processed**: stored under the folder `download_files9` in OneDrive for data security.
 
 ### 2.2: Validation: checking the quality of the output
 This step involves examining the CSV file generated in the previous stage to understand its data structure, identify any missing values, and review files that could not be processed.
 ***Note: Invenio imposes a strict limit of 10,000 records, which will be addressed in future steps.***
 
-#### Deliverable:
-1. **Markdown file**: `examine-output9.md` - documents the validation process and findings.
+#### Deliverables:
+1. **Scripts to Examine CSV**: `examine_output9.py` - run this in terminal and it generates a .md report.
+2. **Reports in Markdown file**: `examine-output9.md`
 
 ## Stage 3: Initial exploration of data; light data preprocessing and validation
 At this stage, I received a CSV file from the previous stage. Traditional data preprocessing tasks at this point often include tokenization, lemmatization, stop word and punctuation removal, lowercasing, and combining results into a single preprocessed string. This was exactly what I did using SpaCy library. However, as I continued to learn, I realized that some of these steps (e.g., stop word removal or lemmatization) might not be necessary for models like BERT, which handle raw text effectively. I have documented the preprocessing process here to provide future researchers with flexibility in deciding what steps are most relevant for their work.

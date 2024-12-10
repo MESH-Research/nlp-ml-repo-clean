@@ -2,7 +2,7 @@ import os
 import time
 import logging
 import requests
-import fitz # Note: fitz is better than Apache Tika as it gives better results for text extraction from a table.
+import fitz
 import pytesseract
 from PIL import Image
 from docx import Document
@@ -10,11 +10,16 @@ from doc2docx import convert
 import pptx
 import sys # Deal with large text field in the output csv
 import csv
+import stat
+from tika import parser
+# Note: Apache Tika is what I turned to after failing many times dealing with .doc files.
 
-#Make sure large text field in csv can be processed, this is useful when I examine the output.csv
+os.environ['TIKA_SERVER_ENDPOINT'] = 'http://localhost:9998'
+
+# Make sure large text field in csv can be processed, this is useful when I examine the output.csv
 csv.field_size_limit(sys.maxsize)
 
-#Set up logging and make it display in my console
+# Set up logging and make it display in my console
 logging.basicConfig(filename='process.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
@@ -41,11 +46,23 @@ def download_file(url, local_filename, auth_headers, max_retries=5, backoff_fact
             logging.info(f"Attempting to download {url} (Attempt {attempt + 1})")
             response = requests.get(url, headers=auth_headers, allow_redirects=True) # Send HTTP request to the specific url
             response.raise_for_status() # Check for HTTP errors
-
-            with open(local_filename, 'wb') as file: # Open local_filename in write mode
-                for chunk in response.iter_content(chunk_size=8192): # Reads the response body in chunks of 8 KB
-                    file.write(chunk)
             
+            # Check for redirect URL in the response
+            if "http" in response.text:
+                file_url = response.text.strip()
+                logging.info(f"Fetching file content from URL: {file_url}")
+                file_response = requests.get(file_url, allow_redirects=True)
+                file_response.raise_for_status()
+                
+                with open(local_filename, 'wb') as file: # Open local_filename in write mode
+                    for chunk in file_response.iter_content(chunk_size=8192): # Reads the response body in chunks of 8 KB
+                        file.write(chunk)
+
+            else:
+                with open(local_filename, 'wb') as file:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        file.write(chunk)
+
             logging.info(f"Successfully downloaded {local_filename}")
             return local_filename # Exits the function download_file
 
@@ -56,29 +73,44 @@ def download_file(url, local_filename, auth_headers, max_retries=5, backoff_fact
     logging.error(f"Failed to download {url} after {max_retries} attempts")
     return None
  
-def extract_file(local_file_path, file_name, investigation_csv=None):
+def extract_file(local_file_path, file_name):
     """
     Extract text from a file based on its extension.
 
     Args:
         local_file_path (str): The path to the file.
         file_name (str): The name of the file.
-        investigation_csv (str, optional): Path to the CSV file for logging unsupported files.
     
     Returns:
-        str: Extracted text for supported files, or None for unsupported files.
+        Extracted text (or None) and Flag (0 for success, 1 for failure).
     """
     # Switched to dictionary{} instead of list[]
     extraction_methods = {
-        '.pdf', extract_text_from_pdf,
-        '.docx', extract_text_from_docx,
-        '.doc', extract_text_from_doc,
-        '.pptx', extract_text_from_pptx,
-        '.txt', extract_text_from_txt
+        '.pdf': extract_text_from_pdf,
+        '.docx': extract_text_from_docx,
+        #'.doc': extract_text_from_doc,
+        '.pptx': extract_text_from_pptx,
+        '.txt': extract_text_from_txt,
+        '.doc': extract_text_from_doc_with_tika,
     }
 
     # Extract file extension
     file_extension = os.path.splitext(file_name)[1].lower()
+    logging.info(f"File extension detected: {file_extension}")
+
+    # # Handle .doc files separately for conversion
+    # if file_extension == '.doc':
+    #     logging.info(f"Attempting to convert .doc file {file_name} to .docx.")
+    #     newdocx_file_path = convert_doc_to_docx(local_file_path)
+        
+    #     # If conversion fails, log and return
+    #     if not newdocx_file_path:
+    #         logging.warning(f"Failed to convert {file_name} to .docx. Retained in folder for manual inspection.")
+    #         return None, 1
+
+    #     # Update file path and extension for further processing
+    #     local_file_path = newdocx_file_path
+    #     file_extension = '.docx'
 
     # Find the matching function for the file extension
     extraction_function = extraction_methods.get(file_extension)
@@ -86,25 +118,18 @@ def extract_file(local_file_path, file_name, investigation_csv=None):
     if extraction_function:
         try:
             logging.info(f"Extracting text from {file_name} using {extraction_function.__name__}")
-            return extraction_function(local_file_path)
+            extracted_text = extraction_function(local_file_path)
+            if extracted_text:
+                return extracted_text, 0 # Success
+            else:
+                return None, 1 # Failure
         except Exception as e:
             logging.error(f"Error extracting text from {file_name} at {local_file_path}: {e}")
-            return None
+            return None, 1
     else:
         # Handle unsupported files
         logging.warning(f"Unsupported file type for {file_name}. Skipping this file.")
-
-        # Instead of simply return None, log skipped file to investigation CSV
-        if investigation_csv:
-            try:
-                with open(investigation_csv, 'a', newline='', encoding='utf-8') as csv_file:
-                    writer = csv.writer(csv_file)
-                    writer.writerow([file_name, file_extension, "Unsupported"])
-                    logging.info(f"Logged skipped file {file_name} to {investigation_csv}.")
-            except Exception as e:
-                logging.error(f"Failed to log skipped file {file_name} to {investigation_csv}: {e}")
-
-        return None
+        return None, 1
     
 def extract_text_from_pdf(pdf_file_path):
     """
@@ -158,10 +183,10 @@ def extract_text_from_pdf(pdf_file_path):
     
 def extract_text_from_docx(docx_file_path):
     """
-    Extract text from a DOCX file.
+    Extract text from a .docx file.
 
     Args:
-        docx_file_path (str): The path to the DOCX file.
+        docx_file_path (str): The path to the .docx file.
 
     Returns:
         str: The extracted text, or None if it fails.
@@ -185,43 +210,17 @@ def extract_text_from_docx(docx_file_path):
         logging.info(f"Successfully extracted text from {len(paragraphs)} paragraphs.")
         return extracted_text
 
+    except PermissionError as e:
+        logging.warning(f"Permission denied for {docx_file_path}: {e}")
+        return None
+    
     except Exception as e:
         logging.error(f"Error extracting text from DOCX file {docx_file_path}: {e}")
         return None
 
-def convert_doc_to_docx(doc_file_path):
+def extract_text_from_doc_with_tika(doc_file_path):
     """
-    Converts a .doc file to .docx format using the doc2docx library.
-
-    Args:
-        doc_file_path (str): Path to the .doc file to be converted.
-
-    Returns:
-        str: Path to the converted .docx file, or None if conversion fails.
-    """
-    try:
-        # Define the output file name
-        base_file_name = os.path.splitext(os.path.basename(doc_file_path))[0]
-        newdocx_file_path = os.path.join(os.path.dirname(doc_file_path), f"{base_file_name}.docx")
-
-        # Convert the file using doc2docx
-        logging.info(f"Converting {doc_file_path} to {newdocx_file_path}")
-        convert(doc_file_path, newdocx_file_path)
-
-        if os.path.exists(newdocx_file_path):
-            logging.info(f"Successfully converted {doc_file_path} to {newdocx_file_path}")
-            return newdocx_file_path
-        else:
-            logging.error(f"Conversion failed. Converted file not found at {newdocx_file_path}")
-            return None
-
-    except Exception as e:
-        logging.error(f"Error converting {doc_file_path} to .docx: {e}")
-        return None
-
-def extract_text_from_doc(doc_file_path):
-    """
-    Extract text from a .doc file. It will be converted to .docx before extraction.
+    Extracts text from a .doc file using Apache Tika server.
 
     Args:
         doc_file_path (str): Path to the .doc file.
@@ -230,28 +229,102 @@ def extract_text_from_doc(doc_file_path):
         str: Extracted text, or None if extraction fails.
     """
     try:
-        if doc_file_path.endswith('.doc'):
-            doc_file_path = convert_doc_to_docx(doc_file_path)
-            if not doc_file_path:
-                logging.error(f"Conversion of {doc_file_path} failed.")
-                return None
-
-        doc = Document(doc_file_path)
-        paragraphs = []
-
-        for para_num, para in enumerate(doc.paragraphs, start=1):
-            if para.text.strip():
-                paragraphs.append(para.text.strip())
-            else:
-                logging.debug(f"Skipped empty paragraph {para_num}.")
-            
-            extracted_text = "\n".join(paragraphs)
-            logging.info(f"Successfully extracted {len(paragraphs)} paragraphs from {doc_file_path}")
-            return extracted_text
-
+        parsed = parser.from_file(doc_file_path)  # Send the file to Tika server
+        return parsed.get("content")  # Extract the content field (text)
     except Exception as e:
-        logging.error(f"Error extracting text from {doc_file_path}: {e}")
+        print(f"Error extracting text from {doc_file_path}: {e}")
         return None
+
+# def convert_doc_to_docx(doc_file_path):
+#     """
+#     Converts a .doc file to .docx format using the doc2docx library.
+
+#     Args:
+#         doc_file_path (str): Path to the .doc file to be converted.
+
+#     Returns:
+#         str: Path to the converted .docx file, or None if conversion fails.
+#     """
+#     try:
+#         # Define the output file name
+#         base_file_name = os.path.splitext(os.path.basename(doc_file_path))[0]
+#         newdocx_file_path = os.path.join(os.path.dirname(doc_file_path), f"{base_file_name}.docx")
+
+#         # Convert the file using doc2docx
+#         logging.info(f"Converting {doc_file_path} to {newdocx_file_path}")
+#         result = convert(doc_file_path, newdocx_file_path)
+
+#         # Add this function to handle doc that has permission errors
+#         if result.get('result') == 'error':
+#             error_message = result.get('error', 'Unknown error')    # Add a fall back mechanism
+#             logging.error(f"Conversion failed for {doc_file_path}: {error_message}")
+#             return None
+            
+#         if os.path.exists(newdocx_file_path):
+#             logging.info(f"Successfully converted {doc_file_path} to {newdocx_file_path}")
+#             return newdocx_file_path
+#         else:
+#             logging.error(f"Conversion failed. Converted file not found at {newdocx_file_path}")
+#             return None
+
+#     except Exception as e:
+#         logging.error(f"Error converting {doc_file_path} to .docx: {e}")
+#         return None
+
+# def extract_text_from_doc(doc_file_path):
+#     """
+#     Extract text from a .doc file. It will be converted to .docx before extraction.
+
+#     Args:
+#         doc_file_path (str): Path to the .doc file.
+
+#     Returns:
+#         str: Extracted text, or None if extraction fails.
+#     """
+#     try:
+#         # Explicitly grant read and write permissions before conversion
+#         try:
+#             os.chmod(doc_file_path, stat.S_IRUSR | stat.S_IWUSR)
+#             logging.info(f"Granted read and write permissions for {doc_file_path}")
+#         except PermissionError as pe:
+#             logging.error(f"Failed to grant permissions for {doc_file_path}: {pe}")
+#             return None
+
+#         # Convert .doc to .docx
+#         if doc_file_path.endswith('.doc'):
+#             newdocx_file_path = convert_doc_to_docx(doc_file_path)
+#             if not newdocx_file_path:
+#                 logging.error(f"Conversion of {doc_file_path} failed.")
+#                 return None
+            
+#             # Delete the original .doc file after successful conversion
+#             os.remove(doc_file_path)
+#             logging.info(f"Deleted original .doc file: {doc_file_path}")
+
+#             doc_file_path = newdocx_file_path # Use the converted .docx file for extraction
+
+#         doc = Document(doc_file_path)
+#         paragraphs = []
+
+#         # Skip empty paragraph
+#         for para_num, para in enumerate(doc.paragraphs, start=1):
+#             if para.text.strip():
+#                 paragraphs.append(para.text.strip())
+#             else:
+#                 logging.debug(f"Skipped empty paragraph {para_num}.")
+            
+#         extracted_text = "\n".join(paragraphs)
+#         logging.info(f"Successfully extracted {len(paragraphs)} paragraphs from {doc_file_path}")
+
+#         # Clean up: delete the .docx file after extraction
+#         os.remove(doc_file_path)
+#         logging.info(f"Deleted converted .docx file: {doc_file_path}")
+
+#         return extracted_text
+    
+#     except Exception as e:
+#         logging.error(f"Error extracting text from {doc_file_path}: {e}")
+#         return None
 
 def extract_text_from_txt(txt_file_path):
     """
@@ -341,6 +414,7 @@ def process_files(api_url, endpoint, api_key, output_csv, download_path):
         page = 1
         page_size = 100 # Invenio limit
         has_more_pages = True
+        counter = 0
 
         # Updated headers to include 'DOI' and 'Flag' in the main CSV
         output_headers = ['Record ID', 'DOI', 'Languages', 'File Name', 'Extracted Text', 'Flag']
@@ -360,33 +434,41 @@ def process_files(api_url, endpoint, api_key, output_csv, download_path):
             #This is where I check each page and all its records
             for record in data.get('hits', {}).get('hits', []):
                 record_id = record['id']
-                doi = record.get('pids', {}).get('doi', {}).get('identifier', 'N/A')  # Extract Doi if available
+                doi = record.get('pids', {}).get('doi', {}).get('identifier', 'N/A')  # Extract DOI if available
                 languages = ','.join([lang['id'] for lang in record['metadata'].get('languages', [])])
                 
                 logging.info(f"Processing record {record_id} (DOI: {doi}, Languages: {languages})")
 
-                for file_name, file_metadat in record.get('files', {}).get('entries', {}).items():
+                for file_name, file_metadata in record.get('files', {}).get('entries', {}).items():
+                    counter += 1
+                    logging.info(f"Processing file Number {counter}: {file_name}")
+
                     file_url = f"{api_url}/api/records/{record_id}/files/{file_name}/content"
                     local_file_path = os.path.join(download_path, file_name)
 
                     # Download the file
                     download_result = download_file(file_url, local_file_path, auth_headers)
-                    if download_result:
-                        extracted_text = extract_file(local_file_path, file_name)
-                        flag = 0 if extracted_text else 1  # Flag: success (0) or failure (1)
-
-                        # Append results to the output CSV
+                    if not download_result:
+                        logging.error(f"Failed to download file {file_name} for record {record_id}.")
                         with open(output_csv, 'a', newline='', encoding='utf-8') as file:
                             writer = csv.writer(file)
-                            writer.writerow([record_id, doi, languages, file_name, extracted_text or '[Error: Extraction Failed]', flag])
+                            writer.writerow ([record_id, doi, languages, file_name, '[Download Failed]', 1])
+                        continue
+        
+                    # Extract file content and get flag
+                    extracted_text, flag = extract_file(local_file_path, file_name)
 
-                        # Start removing downloaded file if processed successfully
+                    # Append results to the output CSV
+                    with open(output_csv, 'a', newline='', encoding='utf-8') as file:
+                        writer = csv.writer(file)
+                        writer.writerow([record_id, doi, languages, file_name, extracted_text or '[Error: Extraction Failed]', flag])
                         if flag == 0:
-                                os.remove(local_file_path)
+                            # Successfully processed, delete the file
+                            os.remove(local_file_path)
+                            logging.info(f"Deleted successfully processed file: {file_name}")
                         else:
-                            logging.warning(f"Failed to process file {file_name} for record {record_id}. Logged for investigation.")
-                    else:
-                        logging.error(f"Failed to download file {file_name} for record {record_id}.")
+                            # Retain files that could not be processed
+                            logging.warning(f"Failed to process file {file_name} for record {record_id}. Retained in folder.")
 
             # Check if there are more pages to fetch
             logging.info(f"Completed page {page}.")
@@ -400,11 +482,10 @@ def process_files(api_url, endpoint, api_key, output_csv, download_path):
     except Exception as e:
         logging.error(f"An error occurred: {e}")
 
-
 def main():
     """Main function that leads the workflow"""
-    api_url = "https://works.hcommons.org/"
-    api_key = "waiting for an updated API key"
+    api_url = "https://works.hcommons.org"
+    api_key = "uco4ofdHA7pwZEM9Gkh28zP8yljvH1VkYiEbN0QY1uriEeKQ3T6OsxUVv4mJ"
     api_endpoint = "api/records"
     output_csv = "output9.csv"
     download_path = "download_files9"

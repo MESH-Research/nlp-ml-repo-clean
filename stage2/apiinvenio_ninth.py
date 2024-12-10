@@ -14,6 +14,8 @@ import stat
 from tika import parser
 # Note: Apache Tika is what I turned to after failing many times dealing with .doc files.
 
+# Set up tika locally
+# Need to download the server `tika-server-standard-3.0.0.jar` from tika's website: https://tika.apache.org/download.html
 os.environ['TIKA_SERVER_ENDPOINT'] = 'http://localhost:9998'
 
 # Make sure large text field in csv can be processed, this is useful when I examine the output.csv
@@ -88,7 +90,7 @@ def extract_file(local_file_path, file_name):
     extraction_methods = {
         '.pdf': extract_text_from_pdf,
         '.docx': extract_text_from_docx,
-        #'.doc': extract_text_from_doc,
+        #'.doc': extract_text_from_doc, old way/had issues
         '.pptx': extract_text_from_pptx,
         '.txt': extract_text_from_txt,
         '.doc': extract_text_from_doc_with_tika,
@@ -485,7 +487,7 @@ def process_files(api_url, endpoint, api_key, output_csv, download_path):
 def main():
     """Main function that leads the workflow"""
     api_url = "https://works.hcommons.org"
-    api_key = "uco4ofdHA7pwZEM9Gkh28zP8yljvH1VkYiEbN0QY1uriEeKQ3T6OsxUVv4mJ"
+    api_key = "my api"
     api_endpoint = "api/records"
     output_csv = "output9.csv"
     download_path = "download_files9"

@@ -123,16 +123,16 @@ def extract_file(local_file_path, file_name):
             logging.info(f"Extracting text from {file_name} using {extraction_function.__name__}") # Return the name of the function as a string
             extracted_text = extraction_function(local_file_path)
             if extracted_text:
-                return extracted_text, 0 # Success
+                return extracted_text, 0 # Success #TODO:return 3 values, extracted_text, failed, supported; add third value of 1 (supported)
             else:
-                return None, 1 # Failure
+                return None, 1 # Failure #TODO: third value should be 1 (supported)
         except Exception as e:
             logging.error(f"Error extracting text from {file_name} at {local_file_path}: {e}")
-            return None, 1
+            return None, 1 #TODO: make changes, 1 (third value, supported)
     else:
         # Handle unsupported files
         logging.warning(f"Unsupported file type for {file_name}. Skipping this file.")
-        return None, 1
+        return None, 1, #TODO:0(meaning not supported)
     
 def extract_text_from_pdf(pdf_file_path):
     """
@@ -167,13 +167,13 @@ def extract_text_from_pdf(pdf_file_path):
                         ocr_text = pytesseract.image_to_string(img)
 
                         # Validate OCR results: remove whitespace, measure length
-                        if len(ocr_text.strip()) < 10:
+                        if len(ocr_text.strip()) < 10: #TODO: thinking about if 10 is a good choice
                             logging.warning(f"OCR results on page {page_num + 1} may be incomplete.")
                             ocr_text = f"[Potential OCR issue on page {page_num + 1}]"
                         
                         text += ocr_text
                     
-                    text += f"\n--- End of Page {page_num + 1} ---\n"
+                    text += f"\n--- End of Page {page_num + 1} ---\n" #TODO: think about how to handle page ending in the future
                 except Exception as page_error:
                     logging.error(f"Error processing page {page_num +1}: {page_error}")
                     text += f"\n[Error extracting page {page_num + 1}]\n"
@@ -421,7 +421,7 @@ def process_files(api_url, endpoint, api_key, output_csv, download_path):
         counter = 0
 
         # Updated headers to include 'DOI' and 'Flag' in the main CSV
-        output_headers = ['Record ID', 'DOI', 'Languages', 'File Name', 'Extracted Text', 'Flag']
+        output_headers = ['Record ID', 'DOI', 'Languages', 'File Name', 'Extracted Text', 'Flag'] #TODO: change column name flag to 'failed' and add column 'supported'
 
         # Make sure output directories and CSV exists.
         os.makedirs(download_path, exist_ok=True)
@@ -480,6 +480,7 @@ def process_files(api_url, endpoint, api_key, output_csv, download_path):
             page += 1
 
         logging.info("All files processed and results written to CSV.")
+        #TODO: this logging info won't get run. If there is an error on one page, it can still go ot the next page.
 
     except requests.exceptions.HTTPError as e:
         logging.error(f"HTTP error: {e}")

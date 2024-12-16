@@ -96,6 +96,7 @@ def extract_file(local_file_path, file_name):
         '.pptx': extract_text_from_pptx,
         '.txt': extract_text_from_txt,
         '.doc': extract_text_from_doc_with_tika,
+        '.ppt': extract_text_from_ppt_with_tika,
     }
 
     # Extract file extension
@@ -239,6 +240,23 @@ def extract_text_from_doc_with_tika(doc_file_path):
         return parsed.get("content")  # Extract the content field (text)
     except Exception as e:
         print(f"Error extracting text from {doc_file_path}: {e}")
+        return None
+
+def extract_text_from_ppt_with_tika(ppt_file_path):
+    """
+    Extract text from a .ppt file using Apache Tika.
+
+    Args:
+        ppt_file_path (str): The path to the .ppt file.
+    
+    Returns:
+        str: Extracted text, or None if extraction fails.
+    """
+    try:
+        parsed = parser.from_file(ppt_file_path)
+        return parsed.get("content")
+    except Exception as e:
+        logging.error(f"Error extracting text from {ppt_file_path}: {e}")
         return None
 
 # def convert_doc_to_docx(doc_file_path):

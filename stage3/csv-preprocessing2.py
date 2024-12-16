@@ -1,19 +1,25 @@
 #This is modified script to process large 'extracted text'. The designning idea is: filter, seperate large text; process them differently; aggregate them before modeling
-
-import spacy
+from dotenv import load_dotenv
+import os
 import pandas as pd
 import logging
 import psutil
 import gc
 from memory_profiler import profile
+import spacy
 
-logging.basicConfig(level=logging.DEBUG, filename='debug.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='stage3preprocessing.log', level=logging.INFO, filemode='w', format='%(asctime)s - %(levelname)s - %(message)s')
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+logging.getLogger().addHandler(console_handler)
 
 def log_memory_usage(message):
     memory = psutil.virtual_memory()
     logging.debug(f"{message} - Memory usage: {memory.percent}% used, {memory.available // (1024 * 1024)} MB available")
 
-#selecting language models
+# Select language models
 languages_to_process = ['eng', 'spa','deu','por','fra']
 model_names = ['en_core_web_sm','es_core_news_sm','de_core_news_sm','pt_core_news_sm','fr_core_news_sm']
 nlp_models = {}
@@ -109,6 +115,17 @@ try:
 except Exception as e:
     logging.error(f"Failed during batch processing: {e}")
 
+def main():
+    load_dotenv()
+    input_filepath = os.getenv("OUTPUT_CSV")
+    output_filepath = os.getenv("PREPROCESS_PATH")
+    batch_size = 100
+
+    try:
+        process_in_batches(input_filepath, batch_size, languages_to_process, nlp_models=)
+        logging.info("Data processing complete.")
+    except Exception as e:
+        logging.error(f"Failed during batch processing: {e}.")
 
 if __name__ == "__main__":
     main()

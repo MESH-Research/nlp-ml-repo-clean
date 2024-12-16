@@ -6,7 +6,7 @@ import fitz
 import pytesseract
 from PIL import Image
 from docx import Document
-#from doc2docx import convert
+#from doc2docx import convert no longer in use
 import pptx
 import sys # Deal with large text field in the output csv
 import csv

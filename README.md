@@ -21,6 +21,7 @@ Stage 2 focuses on extracting metadata and textual information from Invenio RDM.
 
 ### 2.1: Text extraction
 This step involves accessing and downloading files from the Invenio API and extracting text data from the downloaded files. Since the files come in various formats (e.g., PDF, DOCX, PPTX, JPG, etc.), I developed a tailored strategy for text extraction based on each format. To optimize local storage, successfully processed files are deleted afterward.
+***Note: Invenio imposes a strict limit of 10,000 records, which will be addressed in the future.***
 
 #### Deliverables:
 1. **Script**: `apiinvenio_ninth.py` - used for text extraction.
@@ -29,11 +30,10 @@ This step involves accessing and downloading files from the Invenio API and extr
 
 ### 2.2: Validation: checking the quality of the output
 This step involves examining the CSV file generated in the previous stage to understand its data structure, identify any missing values, and review files that could not be processed.
-***Note: Invenio imposes a strict limit of 10,000 records, which will be addressed in future steps.***
 
 #### Deliverables:
-1. **Scripts to Examine CSV**: `examine_output9.py` - run this in terminal and it generates a .md report.
-2. **Reports in Markdown file**: `output9_analysis_report.md`
+1. **Scripts to Examine CSV**: `examine_output9.py` - run this in terminal and it generates a CSV report.
+2. **Reports in CSV file**: `output9_analysis_report.csv`
 
 ## Stage 3: Initial exploration of data; light data preprocessing and validation
 At this stage, I received a CSV file from the previous stage. Traditional data preprocessing tasks at this point often include tokenization, lemmatization, stop word and punctuation removal, lowercasing, and combining results into a single preprocessed string. This was exactly what I did using SpaCy library. However, as I continued to learn, I realized that some of these steps (e.g., stop word removal or lemmatization) might not be necessary for models like BERT, which handle raw text effectively. I have documented the preprocessing process here to provide future researchers with flexibility in deciding what steps are most relevant for their work.

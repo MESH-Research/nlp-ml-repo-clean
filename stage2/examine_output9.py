@@ -2,6 +2,7 @@ import pandas as pd
 import os
 import sys
 import csv
+from dotenv import load_dotenv
 
 # Ensure large CSV fields can be processed
 csv.field_size_limit(sys.maxsize)
@@ -11,24 +12,28 @@ csv.field_size_limit(sys.maxsize)
 
 def examine_csv(file_path, output_report):
     """
-    Analyze a CSV file and generate a report with basic statistics, language analysis, text length analysis, and problemtic rows.
+    Analyze a CSV file and generate a detailed report as another CSV file.
 
     Args:
         file_path(str): path to the csv file to examine.
-        output_report(str): path to the report in .md.
+        output_report(str): path to the report CSV file.
     """
+
     try:
-        # Load the csv
+        # Load the CSV
         print(f"Loading CSV file: {file_path}")
         df = pd.read_csv(file_path)
 
-        # Basic Overview
+        # Create a report DataFrame
+        report_data = []
+
+        # Basic overview
         print(f"Analyzing basic statistics.")
         num_rows = len(df)
-        column_info = df.dtypes.to_dict()
+        column_info = {col: str(dtype) for col, dtype in df.dtypes.items()}
         missing_values = df.isnull().sum().to_dict()
 
-        # Content Inspection
+        # Content inspection
         print(f"Inspecting content.")
         df['Text Length'] = df['Extracted Text'].apply(lambda x: len(str(x)) if pd.notnull(x) else 0)
         avg_length = df['Text Length'].mean()
@@ -36,58 +41,56 @@ def examine_csv(file_path, output_report):
         min_length = df ['Text Length'].min()
         max_length = df['Text Length'].max()
 
-        # Language Analysis
-        print(f"Analayzing language.")
+        # Language analysis
+        print(f"Analyzing language.")
         language_counts = df['Languages'].value_counts().to_dict()
 
-        # Flag Analysis
-        print(f"Analyzing flags.")
-        flag_counts = df['Flag'].value_counts().to_dict() if 'Flag' in df.columns else {}
+        # Failed documents analysis
+        print("Analyzing 'Failed' column.")
+        failed_counts = df['Failed'].value_counts().to_dict() if 'Failed' in df.columns else {}
 
-        # Problematic Rows
-        print("Identifying problemtic rows.")
-        empty_text_rows = df[df['Extracted Text'].isnull()]
-        empty_language_rows = df[df['Languages'].isnull()]
+        # Supported documents analysis
+        print("Analyzing 'Supported' column.")
+        supported_counts = df['Supported'].value_counts().to_dict() if 'Supported' in df.columns else {}
 
-        # Write to Report
-        print(f"Writing report to {output_report}")
-        with open(output_report, 'w') as report:
-            report.write("# CSV Analysis Report\n")
-            report.write(f"##File Analyzed:** {file_path}\n\n")
-            report.write("## Basic Statistics\n")
-            report.write(f"- Total Rows: {num_rows}\n")
-            report.write(f"- Column Info: {column_info}\n")
-            report.write(f"- Missing Values: {missing_values}\n\n")
-            
-            report.write("## Text Length Analysis\n")
-            report.write(f"- Average Length: {avg_length:.2f}\n") # 2 means round the number to 2 decimal places; f means fixed point notation
-            report.write(f"- Median Length: {median_length}\n")
-            report.write(f"- Minimum Length: {min_length}\n")
-            report.write(f"- Maximum Length: {max_length}\n\n")
+        # Problematic rows
+        print("Identifying problematic rows.")
+        empty_text_rows_count = len(df[df['Extracted Text'].isnull()])
+        empty_language_rows_count = len(df[df['Languages'].isnull()])
 
-            report.write("## Language Analysis\n")
-            report.write("Language Counts:\n")
-            for lang, count in language_counts.items():
-                report.write(f"- {lang}: {count}\n")
-            report.write("\n")
+        # Append basic statistics to report
+        report_data.append(['Total Rows', num_rows])
+        report_data.append(['Columns Info', column_info])
+        report_data.append(['Missing Values', missing_values])
 
-            report.write("## Flag Analysis\n")
-            report.write("Flag Counts:\n")
-            for flag, count in flag_counts.items():
-                report.write(f"- {flag}: {count}\n")
-            report.write("\n")
+        # Append text length analysis to report
+        report_data.append(['Average Text Length', avg_length])
+        report_data.append(['Median Text Length', median_length])
+        report_data.append(['Minimum Text Length', min_length])
+        report_data.append(['Maximum Text Length', max_length])
 
-            report.write("## Problematic Rows\n")
-            report.write(f"Empty Text Rows: {len(empty_text_rows)}\n")
-            report.write(f"Empty Language Rows: {len(empty_language_rows)}\n\n")
-            if len(empty_text_rows) > 0:
-                report.write("### Rows with Empty Text\n")
-                report.write(empty_text_rows.to_string(index=False))
-                report.write("\n\n")
-            if len(empty_language_rows) > 0:
-                report.write("### Rows with Empty Language\n")
-                report.write(empty_language_rows.to_string(index=False))
-                report.write("\n")
+        # Append language analysis to report
+        for lang, count in language_counts.items():
+            report_data.append([f"Language: {lang}", count])
+
+        # Append failed documents analysis to report:
+        for flag, count in failed_counts.items():
+            report_data.append([f"Failed: {flag}", count])
+
+        # Append supported documents analysis to report:
+        for flag, count in supported_counts.items():
+            report_data.append([f"Supported: {flag}", count])
+
+        # Append problematic rows info
+        report_data.append(['Empty Text Rows', empty_text_rows_count])
+        report_data.append(['Empty Language Rows', empty_language_rows_count])
+
+        # Save the report to a CSV File
+        print(f"Writing analysis report to {output_report}")
+        with open(output_report, 'w', newline='', encoding='utf-8') as report_file:
+            writer = csv.writer(report_file)
+            writer.writerow(['Metric', 'Value'])
+            writer.writerows(report_data)
 
         print("Report generated successfully.")
     
@@ -95,8 +98,14 @@ def examine_csv(file_path, output_report):
         print(f"An error occurred: {e}")
 
 def main():
-    csv_file_path = "/Users/TianyiKou/Documents/GitHub/nlp-ml-repo-clean/output9.csv" # Your path
-    report_output_path = "output9_analysis_report.md"
+    # Load from .env file
+    load_dotenv()
+
+    # Get CSV path from environment variables
+    csv_file_path = os.getenv("OUTPUT_CSV")
+
+    # Hard coded output path
+    report_output_path = "stage2/output9_analysis_report.csv"
     examine_csv(csv_file_path, report_output_path)
 
 if __name__ == "__main__":

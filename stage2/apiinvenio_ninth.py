@@ -96,7 +96,7 @@ def extract_file(local_file_path, file_name):
         '.pptx': extract_text_from_pptx,
         '.txt': extract_text_from_txt,
         '.doc': extract_text_from_doc_with_tika,
-        '.ppt': extract_text_from_ppt_with_tika,
+        '.ppt': extract_text_from_ppt_with_tika, # add .ppt
     }
 
     # Extract file extension

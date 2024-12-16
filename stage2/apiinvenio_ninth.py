@@ -184,7 +184,7 @@ def extract_text_from_pdf(pdf_file_path):
         logging.error(f"Error processing PDF {pdf_file_path}: {e}")
         return None
     
-def extract_text_from_docx(docx_file_path):
+def extract_text_from_docx(docx_file_path): #TODO: Are we missing other elements if only considering paragraphs?
     """
     Extract text from a .docx file.
 
@@ -204,6 +204,7 @@ def extract_text_from_docx(docx_file_path):
             # Check if the paragraph text contains unexpected formatting or artifacts
             if paragraph.text.strip():
                 clean_text = paragraph.text.strip()
+                #TODO: python has library to take out markup instruction, check this up
                 if "<" in clean_text or ">" in clean_text: # Check for HTML or XML or markup
                     logging.warning(f"Potential formatting instructions detected in paragraph {paragraph_num}: {clean_text}")
                 paragraphs.append(clean_text)
@@ -352,7 +353,7 @@ def extract_text_from_txt(txt_file_path):
         logging.error(f"Error extracting text from TXT file: {e}")
         return None
 
-def extract_text_from_pptx(pptx_file_path):
+def extract_text_from_pptx(pptx_file_path): #TODO: .ppt not supported, check tika and how to integrate 
     """
     Extract text from a PowerPoint file, including slide text, speaker notes, and tables.
 

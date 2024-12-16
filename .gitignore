@@ -1,0 +1,7 @@
+process.log
+__pycache__/
+*.csv
+*.gz
+*.log
+.vscode/
+download_files9/

@@ -23,7 +23,7 @@ os.environ['TIKA_SERVER_ENDPOINT'] = 'http://localhost:9998'
 csv.field_size_limit(sys.maxsize)
 
 # Set up logging and make it display in my console
-logging.basicConfig(filename='process.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='stage2apiinvenio_process.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')

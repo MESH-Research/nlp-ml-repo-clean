@@ -123,7 +123,7 @@ def extract_file(local_file_path, file_name):
             logging.info(f"Extracting text from {file_name} using {extraction_function.__name__}") # Return the name of the function as a string
             extracted_text = extraction_function(local_file_path)
             if extracted_text:
-                return extracted_text, 0 # Success #TODO:return 3 values, extracted_text, failed, supported; add third value of 1 (supported)
+                return extracted_text, 0 # Success #TODO: Return 3 values, extracted_text, failed, supported; add third value of 1 (supported)
             else:
                 return None, 1 # Failure #TODO: third value should be 1 (supported)
         except Exception as e:

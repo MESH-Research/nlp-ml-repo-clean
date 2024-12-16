@@ -13,7 +13,6 @@ logging.getLogger().addHandler(console_handler)
 
 def main():
     try:
-
         # Load CSV
         logging.info("Loading prcessed_output.csv.")
         load_dotenv()

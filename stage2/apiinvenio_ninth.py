@@ -508,8 +508,8 @@ def process_files(api_url, endpoint, api_key, output_csv, download_path):
                 page += 1
 
             except requests.exceptions.HTTPError as e:
-                if e.response and e.response.status_code == 400 and f"page={page + 1}" in str(e):
-                    logging.info("Invenio API limit reached at page {page}. Accessible files processed and results written to CSV.")
+                if e.response and e.response.status_code == 400 and f"page={page}" in str(e):
+                    logging.info("Reached the Invenio page limit at page {page}. Accessible files processed and results written to CSV.")
                     break
                 else:
                     logging.error(f"HTTP error: {e}")

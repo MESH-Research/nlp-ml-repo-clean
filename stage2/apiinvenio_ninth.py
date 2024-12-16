@@ -184,7 +184,7 @@ def extract_text_from_pdf(pdf_file_path):
         logging.error(f"Error processing PDF {pdf_file_path}: {e}")
         return None
     
-def extract_text_from_docx(docx_file_path): #TODO: Are we missing other elements if only considering paragraphs?
+def extract_text_from_docx(docx_file_path): #TODO: For the future, are we missing other elements if only considering paragraphs?
     """
     Extract text from a .docx file.
 

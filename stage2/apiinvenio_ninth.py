@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 import time
 import logging
 import requests
@@ -52,7 +53,7 @@ def download_file(url, local_filename, auth_headers, max_retries=5, backoff_fact
             # Check for redirect URL in the response
             if "http" in response.text:
                 file_url = response.text.strip()
-                logging.info(f"Fetching file content from URL: {file_url}")
+                logging.info(f"Fetching file content for title: {local_filename}")
                 file_response = requests.get(file_url, allow_redirects=True)
                 file_response.raise_for_status()
                 
@@ -87,7 +88,7 @@ def extract_file(local_file_path, file_name):
         Extracted text (or None) and Flag (0 for success, 1 for failure).
     """
     # Switched to dictionary{} instead of list[]
-    # List iterates through each entry, costs more time
+    # List iterates through each entry, which is less efficient
     extraction_methods = {
         '.pdf': extract_text_from_pdf,
         '.docx': extract_text_from_docx,
@@ -123,16 +124,16 @@ def extract_file(local_file_path, file_name):
             logging.info(f"Extracting text from {file_name} using {extraction_function.__name__}") # Return the name of the function as a string
             extracted_text = extraction_function(local_file_path)
             if extracted_text:
-                return extracted_text, 0 # Success #TODO: Return 3 values, extracted_text, failed, supported; add third value of 1 (supported)
+                return extracted_text, 0, 1 # has extracted_text, 0 for success, 1 for supported
             else:
-                return None, 1 # Failure #TODO: third value should be 1 (supported)
+                return None, 1, 1 # no extracted_text, 1 for failed, 1 for supported
         except Exception as e:
             logging.error(f"Error extracting text from {file_name} at {local_file_path}: {e}")
-            return None, 1 #TODO: make changes, 1 (third value, supported)
+            return None, 1, 1 # no extracted_text, 1 for failed due to error, 1 for supported
     else:
         # Handle unsupported files
         logging.warning(f"Unsupported file type for {file_name}. Skipping this file.")
-        return None, 1, #TODO:0(meaning not supported)
+        return None, 1, 0 # no extracted_text, 1 for failed, 0 for unsupported file type
     
 def extract_text_from_pdf(pdf_file_path):
     """
@@ -392,7 +393,7 @@ def extract_text_from_pptx(pptx_file_path): #TODO: .ppt not supported, check tik
             logging.info(f"Processed slide {slide_num}/{len(presentation.slides)}")
             
             if slide_text:
-                # Combien slide content with headers
+                # Combine slide content with headers
                 all_slides_text.append(f"--- Slide {slide_num} ---\n" + "\n".join(slide_text))
             else:
                 logging.warning(f"Slide {slide_num} contains no extractable text.")
@@ -421,8 +422,8 @@ def process_files(api_url, endpoint, api_key, output_csv, download_path):
         has_more_pages = True
         counter = 0
 
-        # Updated headers to include 'DOI' and 'Flag' in the main CSV
-        output_headers = ['Record ID', 'DOI', 'Languages', 'File Name', 'Extracted Text', 'Flag'] #TODO: change column name flag to 'failed' and add column 'supported'
+        # Updated headers to include 'DOI' 'Failed' 'Supported' in the output CSV file
+        output_headers = ['Record ID', 'DOI', 'Languages', 'File Name', 'Extracted Text', 'Failed', 'Supported']
 
         # Make sure output directories and CSV exists.
         os.makedirs(download_path, exist_ok=True)
@@ -432,71 +433,90 @@ def process_files(api_url, endpoint, api_key, output_csv, download_path):
                 csv.writer(file).writerow(output_headers)
 
         while has_more_pages:
-            response = requests.get(f"{api_url}/{endpoint}?size={page_size}&page={page}", headers=auth_headers)
-            response.raise_for_status() # Raise an error for non-200 responses
-            data = response.json()
+            try:
+                response = requests.get(f"{api_url}/{endpoint}?size={page_size}&page={page}", headers=auth_headers)
+                response.raise_for_status() # Raise an error for non-200 responses
+                data = response.json()
 
-            #Check each page and all its records
-            for record in data.get('hits', {}).get('hits', []):
-                record_id = record['id']
-                doi = record.get('pids', {}).get('doi', {}).get('identifier', 'N/A')  # Extract DOI if available
-                languages = ','.join([lang['id'] for lang in record['metadata'].get('languages', [])])
+                # Process each record on the current page
+                for record in data.get('hits', {}).get('hits', []):
+                    record_id = record['id']
+                    doi = record.get('pids', {}).get('doi', {}).get('identifier', 'N/A')  # Extract DOI if available
+                    languages = ','.join([lang['id'] for lang in record['metadata'].get('languages', [])])
                 
-                logging.info(f"Processing record {record_id} (DOI: {doi}, Languages: {languages})")
+                    logging.info(f"Processing record {record_id} (DOI: {doi}, Languages: {languages})")
 
-                for file_name, file_metadata in record.get('files', {}).get('entries', {}).items():
-                    counter += 1
-                    logging.info(f"Processing file Number {counter}: {file_name}")
+                    for file_name, file_metadata in record.get('files', {}).get('entries', {}).items():
+                        counter += 1
+                        logging.info(f"Processing file Number {counter}: {file_name}")
 
-                    file_url = f"{api_url}/api/records/{record_id}/files/{file_name}/content"
-                    local_file_path = os.path.join(download_path, file_name)
+                        file_url = f"{api_url}/api/records/{record_id}/files/{file_name}/content"
+                        local_file_path = os.path.join(download_path, file_name)
 
-                    # Download the file
-                    download_result = download_file(file_url, local_file_path, auth_headers)
-                    if not download_result:
-                        logging.error(f"Failed to download file {file_name} for record {record_id}.")
+                        # Download the file
+                        download_result = download_file(file_url, local_file_path, auth_headers)
+                        if not download_result:
+                            logging.error(f"Failed to download file {file_name} for record {record_id}.")
+                            with open(output_csv, 'a', newline='', encoding='utf-8') as file:
+                                writer = csv.writer(file)
+                                writer.writerow ([record_id, doi, languages, file_name, '[Download Failed]', 1, 0])
+                            continue
+
+                        try: # Attempt to extract file content
+                            extracted_text, failed, supported = extract_file(local_file_path, file_name)
+                        except Exception as e:
+                            logging.error("Error extracting file {file_name} for record {record_id}.")
+                            with open(output_csv, 'a', newline='', encoding='utf-8') as file:
+                                writer = csv.writer(file)
+                                writer.writerow([record_id, doi, languages, file_name, '[Processing Error]', 1, 0])
+                            continue
+
+                        # Append results to the output CSV
                         with open(output_csv, 'a', newline='', encoding='utf-8') as file:
                             writer = csv.writer(file)
-                            writer.writerow ([record_id, doi, languages, file_name, '[Download Failed]', 1])
-                        continue
-        
-                    # Extract file content and get flag
-                    extracted_text, flag = extract_file(local_file_path, file_name)
-
-                    # Append results to the output CSV
-                    with open(output_csv, 'a', newline='', encoding='utf-8') as file:
-                        writer = csv.writer(file)
-                        writer.writerow([record_id, doi, languages, file_name, extracted_text or '[Error: Extraction Failed]', flag])
-                        if flag == 0:
-                            # Successfully processed, delete the file
+                            writer.writerow([record_id, doi, languages, file_name, extracted_text or '[Error: Extraction Failed]', failed, supported ])
+                    
+                        # Successfully processed, delete the file
+                        if failed == 0:
                             os.remove(local_file_path)
                             logging.info(f"Deleted successfully processed file: {file_name}")
                         else:
                             # Retain files that could not be processed
                             logging.warning(f"Failed to process file {file_name} for record {record_id}. Retained in folder.")
 
-            # Check if there are more pages to fetch
-            logging.info(f"Completed page {page}.")
-            has_more_pages = 'next' in data.get('links', {})
-            page += 1
+                # Check if there are more pages to fetch
+                logging.info(f"Completed page {page}.")
+                has_more_pages = 'next' in data.get('links', {})
+                page += 1
 
-        logging.info("All files processed and results written to CSV.")
-        #TODO: this logging info won't get run. If there is an error on one page, it can still go ot the next page.
-
-    except requests.exceptions.HTTPError as e:
-        logging.error(f"HTTP error: {e}")
-    except Exception as e:
-        logging.error(f"An error occurred: {e}")
+            except requests.exceptions.HTTPError as e:
+                if e.response and e.response.status_code == 400 and f"page={page + 1}" in str(e):
+                    logging.info("Invenio API limit reached at page {page}. Accessible files processed and results written to CSV.")
+                    break
+                else:
+                    logging.error(f"HTTP error: {e}")
+            except Exception as e:
+                logging.error(f"An error occurred: {e}")
+    
+    finally: 
+        # Ensure the log statement always runs
+        logging.info("Processing complete.")
 
 def main():
     """Main function that leads the workflow"""
-    api_url = "https://works.hcommons.org"
-    api_key = "my api"
-    api_endpoint = "api/records"
-    output_csv = "output9.csv"
-    download_path = "download_files9"
+    # Load environment variables from .env file
+    load_dotenv()
 
+    api_url = os.getenv("API_URL")
+    api_key = os.getenv("API_KEY")
+    api_endpoint = os.getenv("API_ENDPOINT")
+    output_csv = os.getenv("OUTPUT_CSV")
+    download_path = os.getenv("DOWNLOAD_PATH")
+
+    # Create download directory if it doesn't exist
     os.makedirs(download_path, exist_ok=True)
+
+    # Call the process_files function
     process_files(api_url, api_endpoint, api_key, output_csv, download_path)
 
 if __name__ == "__main__":

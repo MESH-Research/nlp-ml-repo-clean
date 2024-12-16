@@ -1,7 +1,6 @@
 process.log
 __pycache__/
-*.csv
-*.gz
-*.log
+output9.csv
 .vscode/
 download_files9/
+.env

@@ -1,4 +1,4 @@
-.log
+*.log
 __pycache__/
 output9.csv
 deduplicated_output.csv
@@ -6,4 +6,4 @@ duplicates_review.csv
 processed_output.csv
 .vscode/
 download_files9/
-.env
+*.env

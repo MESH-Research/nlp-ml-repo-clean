@@ -4,6 +4,7 @@ output9.csv
 deduplicated_output.csv
 duplicates_review.csv
 processed_output.csv
+bert_embeddings_subset.csv
 .vscode/
 download_files9/
 *.env

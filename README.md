@@ -51,7 +51,7 @@ After learning about BERT and its robust ability of applying embeddings to raw t
 This step validates the preprocessed dataset for quality and consistency. Key tasks included checking for missing or null values in the Processed Text column and analyzing the text length distribution to identify potential outliers or anomalies. Additionally, the dataset’s language distribution was examined to verify that the processed records align with the intended multilingual scope. For further analysis, specific records were investigated based on their Record ID to ensure accurate processing and traceability. These validation steps ensure that the preprocessed data is ready for downstream applications.
 
 #### Deliverables:
-3. **Script2**: `examineprocessed_outputcsv.py` - main task here: completed deduplication. Duplicates are selected based on 'Record ID' and 'DOI'.
+3. **Script2**: `examine_processed_outputcsv.py` - main task here: completed deduplication. Duplicates are selected based on 'Record ID' and 'DOI'.
 4. **CSV file2**: `deduplicated_output.csv` - stored in OneDrive for data security, contains 6000+ files in English, no duplicates, clean and ready for stage 4.
 5. **CSV file3**: `duplicates_review.csv` - stored in OneDrive for data security, currently only has 12 files that are duplicated, in case we want to examine the duplicates.
 
@@ -68,11 +68,11 @@ I studied embeddings and vectorization from a theoretical perspective to gain a 
 Vectorization is computationally intensive and time-consuming. To optimize this stage, I created a subset of 100 records to test and evaluate the vectorization process.
 
 #### Deliverable:
-1. **Script**: `ml-step1.py` - used to apply vectorization to the subset.
+2. **Script**: `bert_embedding_test.py` - used to generate embeddings to the subset, with BERT.
 
 ### 4.3: Quality check of the results from 4.2
 This step marks the point where my work on vectorization concluded. I performed initial quality checks on the subset results, leaving room for future researchers to expand upon this work. Once the subset passes a full quality check, the process can be scaled to train the entire dataset.
-
+3. **Script**: `examine_bert_embedding_test.py` - used to generate embeddings to the subset, with BERT.
 
 ## Acknowledgements and Reflection
 ### Acknowledgements

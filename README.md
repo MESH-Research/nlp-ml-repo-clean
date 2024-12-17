@@ -62,23 +62,23 @@ At this stage, I worked on applying vectorization to the preprocessed output to 
 I studied embeddings and vectorization from a theoretical perspective to gain a deeper understanding of what happens behind the scenes. This approach helped me avoid applying tools without comprehension. While I initially considered continuing with SpaCy for vectorization, I decided to move forward with the BERT method due to SpaCy’s limitations in this area.
 
 #### Deliverable:
-1.**Markdown file**: `learningnotes.md` - contains notes on different types of embeddings.
+1. **Markdown file**: `learningnotes.md` - contains notes on different types of embeddings.
 
 ### 4.2: Applying vectorization to the testing subset
 Vectorization is computationally intensive and time-consuming. To optimize this stage, I created a subset of 100 records to test and evaluate the vectorization process.
 
 #### Deliverable:
-2.**Script**: `bert_embedding_test.py` - used to generate embeddings to the subset, with BERT.
+2. **Script**: `bert_embedding_test.py` - used to generate embeddings to the subset, with BERT.
 
 ### 4.3: Quality check of the results from 4.2
 This step marks the point where my work on embeddings concluded. I performed initial quality checks on the subset results, leaving room for future researchers to expand upon this work. Once the subset passes a full quality check, the process can be scaled to train the entire dataset.
 
 #### Deliverable:
-3.**Script2**: `examine_bert_embedding_test.py` - used to examine and validate the embeddings generated from the subset. This script produces the following outputs:
-4.**Plot1**: `embedding_distribution.png` - Gaussian Plot; the more it looks like a bell the better
-5.**Plot2**: `kmeans_clusters.png` - Check if the clusters are well-separated or overlapping
-6.**CVS Stats1**: `embedding_statistics_report.csv` - Summary statistics (mean, standard deviation)
-7.**CVS Stats2**: `text_similarity_report.csv` - Using cosine similarity to test
+3. **Script2**: `examine_bert_embedding_test.py` - used to examine and validate the embeddings generated from the subset. This script produces the following outputs:
+4. **Plot1**: `embedding_distribution.png` - Gaussian Plot; the more it looks like a bell the better
+5. **Plot2**: `kmeans_clusters.png` - Check if the clusters are well-separated or overlapping
+6. **CVS Stats1**: `embedding_statistics_report.csv` - Summary statistics (mean, standard deviation)
+7. **CVS Stats2**: `text_similarity_report.csv` - Using cosine similarity to test
 
 ## Acknowledgements and Reflection
 ### Acknowledgements

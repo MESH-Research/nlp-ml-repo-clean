@@ -37,7 +37,7 @@ def clean_text(text):
     if pd.isnull(text):
         logging.warning("Encountered NaN value, replacing with empty string.")
         return ""
-    return text.strip()
+    return text.strip() # Trim whitespace
 
 def filter_and_process_batch(df):
     """

@@ -32,8 +32,8 @@ This step involves accessing and downloading files from the Invenio API and extr
 This step involves examining the CSV file generated in the previous stage to understand its data structure, identify any missing values, and review files that could not be processed.
 
 #### Deliverables:
-1. **Scripts to Examine CSV**: `examine_output9.py` - run this in terminal and it generates a CSV report.
-2. **Reports in CSV file**: `output9_analysis_report.csv`
+4. **Scripts to Examine CSV**: `examine_output9.py` - run this in terminal and it generates a CSV report.
+5. **Reports in CSV file**: `output9_analysis_report.csv` - non-sensitive information, stored in Github repo.
 
 ## Stage 3: Initial exploration of data; light data preprocessing and validation
 At this stage, I received a CSV file from the previous stage. Traditional data preprocessing tasks at this point often include tokenization, lemmatization, stop word and punctuation removal, lowercasing, and combining results into a single preprocessed string. This was exactly what I did using SpaCy library. However, as I continued to learn, I realized that some of these steps (e.g., stop word removal or lemmatization) might not be necessary for models like BERT, which handle raw text effectively. I have documented the preprocessing process here to provide future researchers with flexibility in deciding what steps are most relevant for their work.
@@ -41,15 +41,19 @@ At this stage, I received a CSV file from the previous stage. Traditional data p
 ### 3.1: Data preprocessing
 After comparing NLTK and SpaCy for data preprocessing, I chose SpaCy due to its lightweight design, up-to-date features, and manageable learning curve. The goal of this step was to produce a clean, processed CSV file for future use. Since some files contained over 3 million tokens, I developed strategies to process them in chunks, preventing out-of-memory (OOM) errors.
 
+After learning about BERT and its robust ability of applying embeddings to raw text, I decided to take a different approaches to preprocess the `output9.csv`. Minimal data preprocessing, I only took files that are in English and successfully processed, turning 'Extracted Text' into 'Processed Text' (containing two things: handling NaN value and trimming whitespace.).
+
 #### Deliverables:
-1. **Script**: `csv-preprocessing2.py` - used for data preprocessing.
-2. **CSV file**: `processed_output.csv` - stored in OneDrive for data security.
+1. **Script1**: `csv_preprocessing_minimal.py` - used for minimal data preprocessing because BERT prefers it.
+2. **CSV file1**: `processed_output.csv` - results generated from `csv_preprocessing_minimal.py`, stored in OneDrive for data security, contains 6000+ files, 'Extracted Text' got turned into 'Processed Text.'
 
 ### 3.2: Validation: examine the preprocessed output
 This step validates the preprocessed dataset for quality and consistency. Key tasks included checking for missing or null values in the Processed Text column and analyzing the text length distribution to identify potential outliers or anomalies. Additionally, the dataset’s language distribution was examined to verify that the processed records align with the intended multilingual scope. For further analysis, specific records were investigated based on their Record ID to ensure accurate processing and traceability. These validation steps ensure that the preprocessed data is ready for downstream applications.
 
 #### Deliverables:
-1. **Script**: `examineprocessed_outputcsv.py` - used for validating preprocessed data.
+3. **Script2**: `examineprocessed_outputcsv.py` - main task here: completed deduplication. Duplicates are selected based on 'Record ID' and 'DOI'.
+4. **CSV file2**: `deduplicated_output.csv` - stored in OneDrive for data security, contains 6000+ files in English, no duplicates, clean and ready for stage 4.
+5. **CSV file3**: `duplicates_review.csv` - stored in OneDrive for data security, currently only has 12 files that are duplicated, in case we want to examine the duplicates.
 
 ## Stage 4: Vectorization (learning and testing on a subset)
 At this stage, I worked on applying vectorization to the preprocessed output to enable the development of future applications. Embedding/vectorization is a complex field, and I have been learning and testing along the way. To keep the process manageable, I focused on a subset of 100 records for initial testing.

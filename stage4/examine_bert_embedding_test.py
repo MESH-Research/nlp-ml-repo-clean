@@ -159,13 +159,13 @@ def main():
 
     # 1. Compute statistics and save
     mean, std_dev = compute_statistics(embeddings)
-    plot_gaussian(embeddings, output_path="embedding_distribution.png")
+    plot_gaussian(embeddings, output_path="stage4/embedding_distribution.png")
 
     # 2. Perform text similarity tests
-    text_similarity_test(embeddings, texts, output_csv="text_similarity_report.csv")
+    text_similarity_test(embeddings, texts, output_csv="stage4/text_similarity_report.csv")
 
     # 3. Clustering analysis
-    clustering_analysis(embeddings, output_plot="kmeans_clusters.png")
+    clustering_analysis(embeddings, output_plot="stage4/kmeans_clusters.png")
 
     # 4. Nearest neighbor analysis
     nearest_neighbor_test(embeddings, texts, k=4)

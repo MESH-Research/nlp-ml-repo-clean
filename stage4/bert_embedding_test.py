@@ -106,7 +106,7 @@ def main():
     # Save embeddings to a new DF
     embedding_columns = [f"embedding_{i}" for i in range(len(embeddings[0]))]
     embedding_df = pd.DataFrame(embeddings, columns=embedding_columns)
-    output_df = pd.concat([data_subset[['Record ID', 'DOI', 'File Name']], embedding_df], axis=1)
+    output_df = pd.concat([data_subset[['Record ID', 'DOI', 'File Name', 'Processed Text']], embedding_df], axis=1)
     output_df.to_csv(output_filepath, index=False)
     logging.info(f"Embeddings saved to {output_filepath}")
 

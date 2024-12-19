@@ -43,6 +43,9 @@ def main():
             duplicates.to_csv(duplicates_output, index=False)
             logging.info(f"All duplicate rows have been saved to '{duplicates_output}' for review.")
 
+        #TODO: thinking about deduplication
+        #TODO: thinking about only taking the newest version of the deposit when taking data from Invenio in the first place.
+
         # Drop duplicates, keeping the first one
         logging.info("Dropping duplicate rows, keeping the first one.")
         deduplicated_df = filtered_df.drop_duplicates(subset=required_columns, keep='first')

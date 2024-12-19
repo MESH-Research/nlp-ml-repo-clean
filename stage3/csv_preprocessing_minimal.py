@@ -24,6 +24,7 @@ def log_memory_usage(message):
     memory = psutil.virtual_memory()
     logging.info(f"{message} - Memory usage: {memory.percent}% used, {memory.available // (1024 * 1024)} MB available")
 
+# TODO: Check variables across the scripts; think about if i keep df everywhere.
 def clean_text(text):
     """
     Make sure any NaN values are replaced with string
@@ -52,7 +53,7 @@ def filter_and_process_batch(df):
     # Log memory before processing the batch
     log_memory_usage("Before filtering and processing batch.")
 
-    # Filter for English language
+    # Filter for English language and files are processed
     df = df[(df['Languages'] == 'eng') & (df['Failed'] == 0)]
     logging.info(f"Filtering English rows and successfully extracted text from batch of size {len(df)}.")
 
@@ -61,6 +62,7 @@ def filter_and_process_batch(df):
 
     # Drop the unnecessary column 'Extracted Text'
     columns_to_keep = ['Record ID', 'Languages', 'DOI', 'File Name', 'Processed Text', 'Failed', 'Supported']
+    # TODO: thinking about renaming this: dfwithoutextractedtext things like this
     processed_df = df[columns_to_keep]
 
     # Log memory after processing the batch
@@ -100,8 +102,6 @@ def process_csv_in_batches(input_filepath, output_filepath, batch_size=100):
             logging.info(f"Processed {batch_count} rows in batch {chunk_number}. Total processed so far: {cumulative_count} rows.")
             log_memory_usage(f"After processing batch {chunk_number}.")
 
-            # Call garbage collection
-            gc.collect()
             log_memory_usage(f"After garbage cllection post-batch {chunk_number}.")
         
         logging.info(f"All batches processed successfully. Total rows processed: {cumulative_count}.")

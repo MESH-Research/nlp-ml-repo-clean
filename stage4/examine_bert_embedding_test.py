@@ -128,6 +128,7 @@ def clustering_analysis(embeddings, output_plot="kmeans_clusters.png"):
     plt.close()
     logging.info(f"Clustering plot saved to {output_plot}")
 
+# TODO: Look into this and write explaination.
 def nearest_neighbor_test(embeddings, texts, k=3):
     """
     Perform nearest neighbor search for embeddings.

@@ -1,4 +1,4 @@
-# nlp-ml-repo
+# nlp-ml-repo-clean
 ## Introduction
 This repository documents stages of a project using computational methods in natural language processing and machine learning to support the Knowledge Commons. The project covers steps like data acquisition, text extraction, preprocessing, and vectorization. The end goal is to improve search functionality, offer related record recommendations, and implement subject tagging. Future steps, such as the validation of vectorization and its implementation to achieve these end goals, are left for future endeavor.
 
@@ -26,7 +26,7 @@ This step involves accessing and downloading files from the Invenio API and extr
 #### Deliverables:
 1. **Script**: `apiinvenio_ninth.py` - used for text extraction.
 2. **CSV file**: `output9.csv` - stored in OneDrive for data security.
-3. **Files that cannot be processed**: stored under the folder `download_files9` in OneDrive for data security.
+3. **Files that cannot be processed**: stored under the folder `unable_to_process_files` in OneDrive for data security.
 
 ### 2.2: Validation: checking the quality of the output
 This step involves examining the CSV file generated in the previous stage to understand its data structure, identify any missing values, and review files that could not be processed.

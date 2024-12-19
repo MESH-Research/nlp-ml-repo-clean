@@ -7,4 +7,4 @@ processed_output.csv
 bert_embeddings_subset.csv
 .vscode/
 download_files9/
-*.env
+.env

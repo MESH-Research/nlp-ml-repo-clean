@@ -101,8 +101,6 @@ def process_csv_in_batches(input_filepath, output_filepath, batch_size=100):
             
             logging.info(f"Processed {batch_count} rows in batch {chunk_number}. Total processed so far: {cumulative_count} rows.")
             log_memory_usage(f"After processing batch {chunk_number}.")
-
-            log_memory_usage(f"After garbage cllection post-batch {chunk_number}.")
         
         logging.info(f"All batches processed successfully. Total rows processed: {cumulative_count}.")
 

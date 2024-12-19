@@ -19,7 +19,7 @@ Article 2: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
 Article 3: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1]
 **Most importantly**: BoW measures measures the frequency of each word in the document.
 
-2. **[BASIC2]TF-IDF** Vectorization(Term-Frequency-Inverse Document Frequency)
+2. **[BASIC-2]TF-IDF** Vectorization(Term-Frequency-Inverse Document Frequency)
 **TF** T=term D=one specific document: if I see MSU once, in a sentence/document that has 10 words, then TF=1/10.
 **DF** D=Document F=Frequency: here we are talking about the number of documents that contain this term. It does not matter how many times this term was used, ONLY **the count of the documents**. df(apple)=1(MSU only appeared once across all documents)
 **IDF** =log(N/df): logarithm helps in scaling down numbers. e.g. N=3, df=1, IDF('MSU')=log(3/1)=0.477.

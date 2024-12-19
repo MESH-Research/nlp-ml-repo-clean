@@ -94,6 +94,8 @@ def main():
     # Replace NaN with empty strings even I have done it before
     texts = data_subset['Processed Text'].fillna("").tolist()
 
+    # This is where the memory gets used more bc of the tolist!
+
     # Load pre-trained BERT model and tokenizer
     logging.info("Loading pre-trained BERT tokenizer and model...")
     tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")

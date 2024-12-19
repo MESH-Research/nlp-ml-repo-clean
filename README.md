@@ -68,7 +68,8 @@ I studied embeddings and vectorization from a theoretical perspective to gain a 
 Vectorization is computationally intensive and time-consuming. To optimize this stage, I created a subset of 100 records to test and evaluate the vectorization process.
 
 #### Deliverable:
-2. **Script**: `bert_embedding_test.py` - used to generate embeddings to the subset, with BERT.
+2. **Script1**: `bert_embedding_test.py` - used to generate embeddings to the subset, with BERT.
+3. **CSV file1**:`bert_embeddings_subset.csv` - stored in OneDrive for data security, it contains a subset of 100 data entries.
 
 ### 4.3: Quality check of the results from 4.2
 This step marks the point where my work on embeddings concluded. I performed initial quality checks on the subset results, leaving room for future researchers to expand upon this work. Once the subset passes a full quality check, the process can be scaled to train the entire dataset.
